@@ -6,6 +6,16 @@ using RepositoryContracts;
 public class PostInMemoryRepository : IPostRepository
 {
     private List<Post> posts;
+
+
+    public PostInMemoryRepository()
+    {
+        posts = new List<Post>();
+        
+        posts.Add(new Post {Id = 1, Title = "Why is Java overrated?", Content = "Just so",  UserId = 1});
+        posts.Add(new Post {Id = 2, Title = "Is AI gonna take my job?", Content = "Maybe yes, we're screwed",  UserId = 2});
+        posts.Add(new Post {Id = 3, Title = "Best career after failing SWE?", Content = "I am thinking about farmer, what do y'all think?",  UserId = 3});
+    }
     public Task<Post> AddAsync(Post post)
     {
         post.Id = posts.Any()
