@@ -37,7 +37,7 @@ public class CreatePostView
     
     Post post = new Post {Title = title, Content = content, UserId = userId};
     Post createdPost = await postRepository.AddAsync(post);
-    Console.WriteLine("The post was successfully created!");
+    Console.WriteLine($"The post with id {post.Id}  was successfully created!");
   }
     
 }
