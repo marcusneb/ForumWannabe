@@ -22,8 +22,8 @@ public class CliApp
         this.postRepository = postRepository;
 
         createUserView = new CreateUserView(userRepository);
-        createCommentView = new CreateCommentView(commentRepository);
-        createPostView = new CreatePostView(postRepository);
+        createCommentView = new CreateCommentView(commentRepository, postRepository, userRepository);
+        createPostView = new CreatePostView(postRepository, userRepository);
         
         postDetailsView = new PostDetailsView(postRepository, commentRepository);
         postList = new PostList(postRepository);
