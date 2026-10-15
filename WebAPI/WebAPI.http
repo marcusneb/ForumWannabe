@@ -1,0 +1,138 @@
+@baseUrl = http://localhost:5261
+
+###  USERS 
+
+### Create user
+POST {{baseUrl}}/User
+Content-Type: application/json
+
+{
+  "userName": "marcus",
+  "password": "1234"
+}
+
+### Create second user
+POST {{baseUrl}}/User
+Content-Type: application/json
+
+{
+  "userName": "maria",
+  "password": "abcd"
+}
+
+### Create duplicate user 
+POST {{baseUrl}}/User
+Content-Type: application/json
+
+{
+  "userName": "marcus",
+  "password": "xxxx"
+}
+
+### Get single user
+GET {{baseUrl}}/User/1
+
+### Get user that doesn't exist 
+GET {{baseUrl}}/User/999
+
+### Get all users
+GET {{baseUrl}}/User
+
+### Filter users by name
+GET {{baseUrl}}/User?userName=mar
+
+### Update user
+PUT {{baseUrl}}/User/2
+Content-Type: application/json
+
+{
+  "username": "maria2",
+  "password": "newpass"
+}
+
+###POSTS 
+
+### Create post
+POST {{baseUrl}}/Post
+Content-Type: application/json
+
+{
+  "title": "Hello forum",
+  "content": "My first post",
+  "userId": 1
+}
+
+### Create post with bad user
+POST {{baseUrl}}/Post
+Content-Type: application/json
+
+{
+  "title": "Ghost post",
+  "content": "Nobody wrote this",
+  "userId": 999
+}
+
+### Get single post
+GET {{baseUrl}}/Post/1
+
+### Get all posts
+GET {{baseUrl}}/Post
+
+### Filter posts by title
+GET {{baseUrl}}/Post?title=Hello
+
+### Filter posts by author name
+GET {{baseUrl}}/Post?userName=marcus
+
+### Update post
+PUT {{baseUrl}}/Post/1
+Content-Type: application/json
+
+{
+  "title": "Hello forum (edited)",
+  "content": "Updated content"
+}
+
+###  COMMENTS
+
+### Create comment
+POST {{baseUrl}}/Comment
+Content-Type: application/json
+
+{
+  "body": "Nice post!",
+  "postId": 1,
+  "userId": 2
+}
+
+
+### Get single comment
+GET {{baseUrl}}/Comment/1
+
+### Get comments on a post
+GET {{baseUrl}}/Comment?postId=1
+
+### Filter comments by author name
+GET {{baseUrl}}/Comment?userName=maria
+
+### Update comment
+PUT {{baseUrl}}/Comment/1
+Content-Type: application/json
+
+{
+  "body": "Edited comment"
+}
+
+### DELETES
+
+### Delete comment
+DELETE {{baseUrl}}/Comment/1
+
+### Delete post
+DELETE {{baseUrl}}/Post/1
+
+### Delete user
+DELETE {{baseUrl}}/User/2
+
+### Delete user that doesn't exist
+DELETE {{baseUrl}}/User/999
