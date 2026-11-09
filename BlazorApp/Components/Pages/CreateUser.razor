@@ -1,0 +1,38 @@
+@page "/create-user"
+@rendermode InteractiveServer
+@inject IUserService UserService
+
+<h3>Create user</h3>
+
+<div>
+    <input @bind="userName" placeholder="Username" />
+</div>
+<div>
+    <input @bind="password" type="password" placeholder="Password" />
+</div>
+<button @onclick="CreateUserAsync">Create</button>
+
+<p>@message</p>
+
+@code {
+    private string userName = "";
+    private string password = "";
+    private string message = "";
+
+    private async Task CreateUserAsync()
+    {
+        try
+        {
+            UserDto created = await UserService.AddUserAsync(
+                new CreateUserDto { UserName = userName, Password = password });
+
+            message = $"User {created.Username} created!";
+            userName = "";
+            password = "";
+        }
+        catch (Exception e)
+        {
+            message = e.Message;
+        }
+    }
+}

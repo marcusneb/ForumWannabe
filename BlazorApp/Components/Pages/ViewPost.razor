@@ -1,0 +1,106 @@
+@page "/posts/{Id:int}"
+@rendermode InteractiveServer
+@inject IPostService PostService
+@inject ICommentService CommentService
+@inject IUserService UserService
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <p style="color: red">@error</p>
+}
+else if (post is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <h3>@post.Title</h3>
+    <p><i>by @post.AuthorUsername</i></p>
+    <p>@post.Content</p>
+
+    <h4>Comments</h4>
+    @if (comments.Count == 0)
+    {
+        <p>No comments yet.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (CommentDto comment in comments)
+            {
+                <li><b>@comment.AuthorUsername:</b> @comment.Body</li>
+            }
+        </ul>
+    }
+
+    <h4>Add a comment</h4>
+    <div>
+        <select @bind="selectedUserId">
+            <option value="0">-- pick user --</option>
+            @foreach (UserDto user in users)
+            {
+                <option value="@user.Id">@user.Username</option>
+            }
+        </select>
+    </div>
+    <div>
+        <textarea @bind="commentBody" placeholder="Write a comment"></textarea>
+    </div>
+    <button @onclick="AddCommentAsync">Comment</button>
+    <p>@commentMessage</p>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private PostDto? post;
+    private List<CommentDto> comments = new();
+    private List<UserDto> users = new();
+
+    private int selectedUserId;
+    private string commentBody = "";
+    private string commentMessage = "";
+    private string error = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            post = await PostService.GetSingleAsync(Id);
+            comments = await CommentService.GetManyAsync(postId: Id);
+            users = await UserService.GetManyAsync();
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+        }
+    }
+
+    private async Task AddCommentAsync()
+    {
+        if (selectedUserId == 0 || string.IsNullOrWhiteSpace(commentBody))
+        {
+            commentMessage = "Pick a user and write something.";
+            return;
+        }
+
+        try
+        {
+            await CommentService.AddCommentAsync(new CreateCommentDto
+            {
+                Body = commentBody,
+                PostId = Id,
+                UserId = selectedUserId
+            });
+
+            commentBody = "";
+            commentMessage = "";
+            comments = await CommentService.GetManyAsync(postId: Id);
+        }
+        catch (Exception e)
+        {
+            commentMessage = e.Message;
+        }
+    }
+}

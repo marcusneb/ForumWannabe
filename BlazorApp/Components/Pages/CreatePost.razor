@@ -1,0 +1,71 @@
+@page "/create-post"
+@rendermode InteractiveServer
+@inject IPostService PostService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+
+<h3>Create post</h3>
+
+<div>
+    <select @bind="selectedUserId">
+        <option value="0">-- pick user --</option>
+        @foreach (UserDto user in users)
+        {
+            <option value="@user.Id">@user.Username</option>
+        }
+    </select>
+</div>
+<div>
+    <input @bind="title" placeholder="Title" />
+</div>
+<div>
+    <textarea @bind="content" placeholder="Content"></textarea>
+</div>
+<button @onclick="CreatePostAsync">Create</button>
+
+<p>@message</p>
+
+@code {
+    private List<UserDto> users = new();
+    private int selectedUserId;
+    private string title = "";
+    private string content = "";
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            users = await UserService.GetManyAsync();
+        }
+        catch (Exception e)
+        {
+            message = e.Message;
+        }
+    }
+
+    private async Task CreatePostAsync()
+    {
+        if (selectedUserId == 0 || string.IsNullOrWhiteSpace(title))
+        {
+            message = "Pick a user and write a title.";
+            return;
+        }
+
+        try
+        {
+            PostDto created = await PostService.AddPostAsync(new CreatePostDto
+            {
+                Title = title,
+                Content = content,
+                UserId = selectedUserId
+            });
+
+            Navigation.NavigateTo($"posts/{created.Id}");
+        }
+        catch (Exception e)
+        {
+            message = e.Message;
+        }
+    }
+}

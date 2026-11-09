@@ -1,0 +1,58 @@
+@page "/posts"
+@rendermode InteractiveServer
+@inject IPostService PostService
+
+<h3>Posts</h3>
+
+<div>
+    <input @bind="titleFilter" placeholder="Search by title" />
+    <button @onclick="LoadPostsAsync">Search</button>
+</div>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <p style="color: red">@error</p>
+}
+else if (posts is null)
+{
+    <p>Loading...</p>
+}
+else if (posts.Count == 0)
+{
+    <p>No posts found.</p>
+}
+else
+{
+    <ul>
+        @foreach (PostDto post in posts)
+        {
+            <li>
+                <a href="posts/@post.Id">@post.Title</a> by @post.AuthorUsername
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<PostDto>? posts;
+    private string titleFilter = "";
+    private string error = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPostsAsync();
+    }
+
+    private async Task LoadPostsAsync()
+    {
+        try
+        {
+            error = "";
+            posts = await PostService.GetManyAsync(title: titleFilter);
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+        }
+    }
+}
