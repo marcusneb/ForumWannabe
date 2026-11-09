@@ -1,20 +1,12 @@
 @page "/create-post"
 @rendermode InteractiveServer
+@attribute [Authorize]
+@using System.Security.Claims
 @inject IPostService PostService
-@inject IUserService UserService
 @inject NavigationManager Navigation
 
 <h3>Create post</h3>
 
-<div>
-    <select @bind="selectedUserId">
-        <option value="0">-- pick user --</option>
-        @foreach (UserDto user in users)
-        {
-            <option value="@user.Id">@user.Username</option>
-        }
-    </select>
-</div>
 <div>
     <input @bind="title" placeholder="Title" />
 </div>
@@ -26,29 +18,31 @@
 <p>@message</p>
 
 @code {
-    private List<UserDto> users = new();
-    private int selectedUserId;
+    [CascadingParameter] public Task<AuthenticationState> State { get; set; } = null!;
+
+    private int userId;
     private string title = "";
     private string content = "";
     private string message = "";
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        AuthenticationState authenticationState = await State;
+        ClaimsPrincipal claimsPrincipal = authenticationState.User;
+        if (claimsPrincipal.Identity is null || !claimsPrincipal.Identity.IsAuthenticated)
         {
-            users = await UserService.GetManyAsync();
+            return;
         }
-        catch (Exception e)
-        {
-            message = e.Message;
-        }
+
+        string userIdAsString = claimsPrincipal.Claims.Single(c => c.Type == "Id").Value;
+        userId = int.Parse(userIdAsString);
     }
 
     private async Task CreatePostAsync()
     {
-        if (selectedUserId == 0 || string.IsNullOrWhiteSpace(title))
+        if (string.IsNullOrWhiteSpace(title))
         {
-            message = "Pick a user and write a title.";
+            message = "Write a title.";
             return;
         }
 
@@ -58,7 +52,7 @@
             {
                 Title = title,
                 Content = content,
-                UserId = selectedUserId
+                UserId = userId
             });
 
             Navigation.NavigateTo($"posts/{created.Id}");

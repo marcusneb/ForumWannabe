@@ -1,5 +1,8 @@
 using BlazorApp.Components;
 using BlazorApp.Services;
+using BlazorApp.Auth;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,14 @@ builder.Services.AddHttpClient<ICommentService, HttpCommentService>(client =>
 {
     client.BaseAddress = new Uri("http://localhost:5261/");
 });
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri("http://localhost:5261/")
+});
+builder.Services.AddScoped<AuthenticationStateProvider, SimpleAuthProvider>();
+// Needed so @attribute [Authorize] doesn't crash when a page is opened directly via the URL
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options => options.LoginPath = "/login");
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

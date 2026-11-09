@@ -2,7 +2,7 @@
 @rendermode InteractiveServer
 @inject IPostService PostService
 @inject ICommentService CommentService
-@inject IUserService UserService
+@using System.Security.Claims
 
 @if (!string.IsNullOrEmpty(error))
 {
@@ -33,32 +33,31 @@ else
         </ul>
     }
 
-    <h4>Add a comment</h4>
-    <div>
-        <select @bind="selectedUserId">
-            <option value="0">-- pick user --</option>
-            @foreach (UserDto user in users)
-            {
-                <option value="@user.Id">@user.Username</option>
-            }
-        </select>
-    </div>
-    <div>
-        <textarea @bind="commentBody" placeholder="Write a comment"></textarea>
-    </div>
-    <button @onclick="AddCommentAsync">Comment</button>
-    <p>@commentMessage</p>
+    <AuthorizeView>
+        <Authorized>
+            <h4>Add a comment</h4>
+            <div>
+                <textarea @bind="commentBody" placeholder="Write a comment"></textarea>
+            </div>
+            <button @onclick="AddCommentAsync">Comment</button>
+            <p>@commentMessage</p>
+        </Authorized>
+        <NotAuthorized>
+            <p>Log in to comment.</p>
+        </NotAuthorized>
+    </AuthorizeView>
 }
 
 @code {
     [Parameter]
     public int Id { get; set; }
 
+    [CascadingParameter] public Task<AuthenticationState> State { get; set; } = null!;
+
     private PostDto? post;
     private List<CommentDto> comments = new();
-    private List<UserDto> users = new();
 
-    private int selectedUserId;
+    private int userId;
     private string commentBody = "";
     private string commentMessage = "";
     private string error = "";
@@ -69,19 +68,28 @@ else
         {
             post = await PostService.GetSingleAsync(Id);
             comments = await CommentService.GetManyAsync(postId: Id);
-            users = await UserService.GetManyAsync();
         }
         catch (Exception e)
         {
             error = e.Message;
         }
+
+        AuthenticationState authenticationState = await State;
+        ClaimsPrincipal claimsPrincipal = authenticationState.User;
+        if (claimsPrincipal.Identity is null || !claimsPrincipal.Identity.IsAuthenticated)
+        {
+            return;
+        }
+
+        string userIdAsString = claimsPrincipal.Claims.Single(c => c.Type == "Id").Value;
+        userId = int.Parse(userIdAsString);
     }
 
     private async Task AddCommentAsync()
     {
-        if (selectedUserId == 0 || string.IsNullOrWhiteSpace(commentBody))
+        if (string.IsNullOrWhiteSpace(commentBody))
         {
-            commentMessage = "Pick a user and write something.";
+            commentMessage = "Write something.";
             return;
         }
 
@@ -91,7 +99,7 @@ else
             {
                 Body = commentBody,
                 PostId = Id,
-                UserId = selectedUserId
+                UserId = userId
             });
 
             commentBody = "";
